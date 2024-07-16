@@ -2,15 +2,24 @@ use raylib::{
     color::Color,
     math::{Rectangle, Vector2},
 };
-use std::{env::current_dir, os::unix::raw::time_t, path::PathBuf};
+use std::{env::current_dir, path::PathBuf};
 
 use raylib::prelude::*;
 mod game;
 mod player;
 
+const WIDTH: i32 = 128 * 3;
+const HEIGHT: i32 = 256 * 3;
+
+#[derive(Debug)]
+struct Dimension {
+    height: i32,
+    width: i32,
+}
+
 fn main() {
     let (mut rl, thread) = raylib::init()
-        .size(128 * 3, 256 * 3)
+        .size(WIDTH, HEIGHT)
         .title("Groove Gunner")
         .build();
 
@@ -57,10 +66,15 @@ fn main() {
     let mut frame_counter: i64 = 0;
     let mut current_frame: i64 = 0;
     let frame_speed: i64 = 4;
+    let dimension = Dimension {
+        width: WIDTH,
+        height: HEIGHT,
+    };
     rl.set_target_fps(60);
     while !rl.window_should_close() {
-        let elapsed_time = &rl.get_time();
-        let time_text = format!("{:.2} seconds", elapsed_time);
+        // let frame_time = &rl.get_frame_time();
+        // let elapsed_time = &rl.get_time();
+        // let time_text = format!("{:.2} seconds", elapsed_time);
         frame_counter += 1;
         if frame_counter >= (60 / frame_speed) {
             frame_counter = 0;
@@ -71,15 +85,8 @@ fn main() {
         }
         // let frame_time = rl.get_frame_time();
         let mut d = rl.begin_drawing(&thread);
-        d.draw_text_ex(
-            font,
-            &time_text,
-            Vector2 { x: 50.0, y: 50.0 },
-            50.0,
-            0.0,
-            Color::WHITE,
-        );
-        play_pulse_anim(&mut d, current_frame, misc, 1);
+        play_pulse_anim(current_frame, 0, &mut d, misc, font, &dimension);
+        play_pulse_anim(current_frame, 21, &mut d, misc, font, &dimension);
         // for (i, frame) in pulse_frames.iter_mut().enumerate() {
         //     if i % 2 == 0 {
         //         play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 2);
@@ -110,15 +117,27 @@ fn main() {
 }
 
 fn play_pulse_anim(
-    d: &mut RaylibDrawHandle,
     current_frame: i64,
+    grid: i32,
+    d: &mut RaylibDrawHandle,
     pulse_texture: &Texture2D,
-    // frame_time: f32,
-    which_grid: i32,
-    // beat: i32,
+    font: &Font,
+    dimension: &Dimension,
 ) {
-    // let frame_speed = frame_time * 3.0 * (beat as f32);
-
+    let mut position = Vector2 { x: 0.0, y: 0.0 };
+    position.x = grid as f32 * 32.0;
+    if grid * 32 > dimension.width {
+        position.x = (((grid % 12) - 1) * 32) as f32;
+        position.y = (grid / 13 * 32) as f32;
+    }
+    d.draw_text_ex(
+        font,
+        "Z",
+        Vector2 { x: 8.0, y: 5.0 },
+        25.0,
+        0.0,
+        Color::WHITE,
+    );
     d.draw_texture_pro(
         pulse_texture,
         Rectangle {
@@ -128,10 +147,10 @@ fn play_pulse_anim(
             height: 16.0,
         },
         Rectangle {
-            x: (which_grid * 32) as f32,
-            y: 0.0,
-            width: (16 * 2) as f32,
-            height: (16 * 2) as f32,
+            x: position.x,
+            y: position.y,
+            width: 32 as f32,
+            height: 32 as f32,
         },
         Vector2 { x: 0.0, y: 0.0 },
         0.0,
