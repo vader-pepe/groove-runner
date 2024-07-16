@@ -2,7 +2,7 @@ use raylib::{
     color::Color,
     math::{Rectangle, Vector2},
 };
-use std::{env::current_dir, path::PathBuf};
+use std::{env::current_dir, os::unix::raw::time_t, path::PathBuf};
 
 use raylib::prelude::*;
 mod game;
@@ -53,26 +53,40 @@ fn main() {
         .load_texture(&thread, pathbuf_into_str(path_utils(ships_path)).as_str())
         .expect("cannot load texture!");
 
-    let mut pulse_frames: Vec<f32> = vec![3.0; 12];
+    // let mut pulse_frames: Vec<f32> = vec![3.0; 12];
+    let mut frame_counter: i64 = 0;
+    let mut current_frame: i64 = 0;
+    let frame_speed: i64 = 4;
     rl.set_target_fps(60);
     while !rl.window_should_close() {
-        let frame_time = rl.get_frame_time();
+        let elapsed_time = &rl.get_time();
+        let time_text = format!("{:.2} seconds", elapsed_time);
+        frame_counter += 1;
+        if frame_counter >= (60 / frame_speed) {
+            frame_counter = 0;
+            current_frame += 1;
+            if current_frame >= 4 {
+                current_frame = 0;
+            }
+        }
+        // let frame_time = rl.get_frame_time();
         let mut d = rl.begin_drawing(&thread);
         d.draw_text_ex(
             font,
-            "Hello World",
+            &time_text,
             Vector2 { x: 50.0, y: 50.0 },
             50.0,
             0.0,
             Color::WHITE,
         );
-        for (i, frame) in pulse_frames.iter_mut().enumerate() {
-            if i % 2 == 0 {
-                play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 2);
-            } else {
-                play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 3);
-            }
-        }
+        play_pulse_anim(&mut d, current_frame, misc, 1);
+        // for (i, frame) in pulse_frames.iter_mut().enumerate() {
+        //     if i % 2 == 0 {
+        //         play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 2);
+        //     } else {
+        //         play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 3);
+        //     }
+        // }
         d.draw_texture_pro(
             player,
             Rectangle {
@@ -97,18 +111,18 @@ fn main() {
 
 fn play_pulse_anim(
     d: &mut RaylibDrawHandle,
-    current_frame: &mut f32,
+    current_frame: i64,
     pulse_texture: &Texture2D,
-    frame_time: f32,
+    // frame_time: f32,
     which_grid: i32,
-    beat: i32,
+    // beat: i32,
 ) {
-    let frame_speed = frame_time * 3.0 * (beat as f32);
+    // let frame_speed = frame_time * 3.0 * (beat as f32);
 
     d.draw_texture_pro(
         pulse_texture,
         Rectangle {
-            x: (40.0 + (current_frame.round() * 16.0)),
+            x: (40 + (current_frame * 16)) as f32,
             y: 32.0,
             width: 16.0,
             height: 16.0,
@@ -123,10 +137,6 @@ fn play_pulse_anim(
         0.0,
         Color::WHITE,
     );
-    *current_frame -= 1.0 * frame_speed;
-    if *current_frame <= 0.0 {
-        *current_frame = 3.0;
-    }
 }
 
 fn path_utils(s: &str) -> PathBuf {
