@@ -62,7 +62,7 @@ fn main() {
         .load_texture(&thread, pathbuf_into_str(path_utils(ships_path)).as_str())
         .expect("cannot load texture!");
 
-    // let mut pulse_frames: Vec<f32> = vec![3.0; 12];
+    let mut pulse_frames: Vec<i64> = vec![3; 100];
     let mut frame_counter: i64 = 0;
     let mut current_frame: i64 = 0;
     let frame_speed: i64 = 4;
@@ -85,15 +85,11 @@ fn main() {
         }
         // let frame_time = rl.get_frame_time();
         let mut d = rl.begin_drawing(&thread);
-        play_pulse_anim(current_frame, 0, &mut d, misc, font, &dimension);
-        play_pulse_anim(current_frame, 21, &mut d, misc, font, &dimension);
-        // for (i, frame) in pulse_frames.iter_mut().enumerate() {
-        //     if i % 2 == 0 {
-        //         play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 2);
-        //     } else {
-        //         play_pulse_anim(&mut d, frame, misc, frame_time, i as i32, 3);
-        //     }
-        // }
+        // play_pulse_anim(current_frame, 0, &mut d, misc, font, &dimension);
+        // play_pulse_anim(current_frame, 21, &mut d, misc, font, &dimension);
+        for (i, frame) in pulse_frames.iter_mut().enumerate() {
+            play_pulse_anim(frame, i as f64, &mut d, misc, font, &dimension);
+        }
         d.draw_texture_pro(
             player,
             Rectangle {
@@ -117,23 +113,29 @@ fn main() {
 }
 
 fn play_pulse_anim(
-    current_frame: i64,
-    grid: i32,
+    current_frame: &mut i64,
+    grid: f64,
     d: &mut RaylibDrawHandle,
     pulse_texture: &Texture2D,
     font: &Font,
     dimension: &Dimension,
 ) {
+    // println!("{}", current_frame);
     let mut position = Vector2 { x: 0.0, y: 0.0 };
     position.x = grid as f32 * 32.0;
-    if grid * 32 > dimension.width {
-        position.x = (((grid % 12) - 1) * 32) as f32;
-        position.y = (grid / 13 * 32) as f32;
+    let temp_y = (((grid + 1.0) / 12.0).ceil() - 1.0) * 32.0;
+    if grid * 32.0 >= dimension.width as f64 {
+        position.x = ((grid % 12.0) * 32.0) as f32;
+        position.y = temp_y as f32;
     }
+    println!("{:?}", position);
     d.draw_text_ex(
         font,
-        "Z",
-        Vector2 { x: 8.0, y: 5.0 },
+        "Z", // TODO: change to correct keys
+        Vector2 {
+            x: position.x + 8.0,
+            y: position.y + 5.0,
+        },
         25.0,
         0.0,
         Color::WHITE,
@@ -141,7 +143,7 @@ fn play_pulse_anim(
     d.draw_texture_pro(
         pulse_texture,
         Rectangle {
-            x: (40 + (current_frame * 16)) as f32,
+            x: (40 + (*current_frame * 16)) as f32,
             y: 32.0,
             width: 16.0,
             height: 16.0,
@@ -156,6 +158,13 @@ fn play_pulse_anim(
         0.0,
         Color::WHITE,
     );
+    // if frame_counter >= (60 / frame_speed) {
+    //     frame_counter = 0;
+    //     *current_frame += 1;
+    //     if current_frame >= 4 {
+    //         *current_frame = 0;
+    //     }
+    // }
 }
 
 fn path_utils(s: &str) -> PathBuf {
