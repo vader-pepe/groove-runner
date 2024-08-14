@@ -120,7 +120,6 @@ fn play_pulse_anim(
     font: &Font,
     dimension: &Dimension,
 ) {
-    // println!("{}", current_frame);
     let mut position = Vector2 { x: 0.0, y: 0.0 };
     position.x = grid as f32 * 32.0;
     let temp_y = (((grid + 1.0) / 12.0).ceil() - 1.0) * 32.0;
@@ -128,7 +127,6 @@ fn play_pulse_anim(
         position.x = ((grid % 12.0) * 32.0) as f32;
         position.y = temp_y as f32;
     }
-    println!("{:?}", position);
     d.draw_text_ex(
         font,
         "Z", // TODO: change to correct keys
